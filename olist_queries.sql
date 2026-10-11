@@ -1,3 +1,7 @@
+-- PART 1: OVERALL SUMMARY QUERIES
+-- Data: Olist Brazilian e-commerce dataset (all monetary values in BRL)
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 --Translated product name and total revenue
 
 SELECT
@@ -67,6 +71,72 @@ review_score
 ORDER BY
 review_score ASC
 
+;
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- PART 2: STATE LEVEL QUERIES
+
+--Category by state
+
+SELECT
+c.customer_state, p.product_category_name_english, SUM(oi.price) AS total_revenue
+
+FROM
+
+olist_order_items_dataset oi
+JOIN
+olist_orders_dataset oo ON oi.order_id = oo.order_id
+JOIN
+olist_customers_dataset c ON oo.customer_id = c.customer_id
+JOIN
+olist_products_dataset op ON oi.product_id = op.product_id
+JOIN
+product_category_name_translation p ON op.product_category_name = p.product_category_name
+
+GROUP BY
+
+c.customer_state, p.product_category_name_english
+
+;
+
+--Payment type by state
+
+SELECT
+c.customer_state, p.payment_type, SUM(p.payment_value) AS total_payment_value, CoUNT(P.PAYMENT_TYPE) AS payment_count
+
+FROM
+olist_customers_dataset c
+JOIN
+olist_orders_dataset oo ON c.customer_id = oo.customer_id
+JOIN
+olist_order_payments_dataset p ON p.order_id = oo.order_id
+
+GROUP BY
+c.customer_state, p.payment_type
+
+;
+
+--Delivery time by review score by state
+
+SELECT
+c.customer_state, r.review_score, 
+	ROUND(SUM(julianday(oo.order_delivered_customer_date) - julianday(order_purchase_timestamp)),1) AS days_to_deliver,
+	COUNT(*) AS order_count
+
+FROM
+olist_order_reviews_dataset r
+JOIN
+olist_orders_dataset oo ON r.order_id = oo.order_id
+JOIN
+olist_customers_dataset c ON oo.customer_id = c.customer_id
+
+WHERE
+oo.order_delivered_customer_date IS NOT NULL
+GROUP BY
+c.customer_state, r.review_score
+
+;
 
 
 
@@ -74,4 +144,3 @@ review_score ASC
 
 
 
-</sql><current_tab id="0"/></tab_sql></sqlb_project>
